@@ -1,0 +1,56 @@
+// app/(admin)/admin/locations/page.tsx
+'use client'
+
+import { useState, useEffect } from 'react'
+import AdminSidebar from '@/components/AdminSidebar'
+import { fetchLocations, createLocation } from '@/lib/locations'
+import type { Location } from '@/types'
+
+export default function AdminLocationsPage() {
+  const [locations, setLocations] = useState<Location[]>([])
+  const [newLocationName, setNewLocationName] = useState('')
+
+  useEffect(() => {
+    async function loadLocations() {
+      const data = await fetchLocations()
+      setLocations(data)
+    }
+    loadLocations()
+  }, [])
+
+  const handleCreateLocation = async () => {
+    if (newLocationName.trim()) {
+      const newLocation = await createLocation({ name: newLocationName })
+      setLocations((prevLocations) => [...prevLocations, newLocation])
+      setNewLocationName('')
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <AdminSidebar />
+      <div className="flex-1 p-8">
+        <h1 className="text-2xl font-semibold">Manage Locations</h1>
+        <div className="mt-4 space-y-4">
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={newLocationName}
+              onChange={(e) => setNewLocationName(e.target.value)}
+              placeholder="New location name"
+              className="p-2 border rounded"
+            />
+            <button onClick={handleCreateLocation} className="p-2 bg-blue-500 text-white rounded">
+              Add Location
+            </button>
+          </div>
+          <ul className="list-disc pl-5">
+            {locations.map((location) => (
+              <li key={location.id}>{location.name}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPERADMIN
+  CAMPING_ADMIN
+  USER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role
+  campings  CampingAdmin[]
+  bookings  Booking[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Camping {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  description String?
+  theme       CampingTheme?
+  locationTypes LocationType[]
+  locations   Location[]
+  admins      CampingAdmin[]
+  bookings    Booking[]
+  amenities   Amenity[]
+  closures    SeasonalClosure[]
+  emailTemplates EmailTemplate[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model CampingAdmin {
+  id        String   @id @default(cuid())
+  camping   Camping  @relation(fields: [campingId], references: [id])
+  campingId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+model LocationType {
+  id          String    @id @default(cuid())
+  camping     Camping   @relation(fields: [campingId], references: [id])
+  campingId   String
+  name        String
+  maxPersons  Int
+  basePrice   Float
+  description String?
+  amenities   Amenity[] @relation("LocationTypeAmenities")
+  locations   Location[]
+}
+
+model Location {
+  id            String     @id @default(cuid())
+  camping       Camping    @relation(fields: [campingId], references: [id])
+  campingId     String
+  locationType  LocationType @relation(fields: [locationTypeId], references: [id])
+  locationTypeId String
+  name          String
+  status        String
+  latitude      Float
+  longitude     Float
+  priceOverride Float?
+  amenities     Amenity[] @relation("LocationAmenities")
+  bookings      Booking[]
+}
+
+model Amenity {
+  id        String   @id @default(cuid())
+  camping   Camping  @relation(fields: [campingId], references: [id])
+  campingId String
+  name      String
+  icon      String?
+  locationTypes LocationType[] @relation("LocationTypeAmenities")
+  locations Location[] @relation("LocationAmenities")
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  camping     Camping       @relation(fields: [campingId], references: [id])
+  campingId   String
+  user        User          @relation(fields: [userId], references: [id])
+  userId      String
+  location    Location      @relation(fields: [locationId], references: [id])
+  locationId  String
+  status      BookingStatus
+  arrivalDate DateTime
+  departureDate DateTime
+  totalPrice  Float
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model PricingRule {
+  id        String   @id @default(cuid())
+  camping   Camping  @relation(fields: [campingId], references: [id])
+  campingId String
+  name      String
+  type      String
+  modifier  Float
+  startDate DateTime?
+  endDate   DateTime?
+}
+
+model SeasonalClosure {
+  id        String   @id @default(cuid())
+  camping   Camping  @relation(fields: [campingId], references: [id])
+  campingId String
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+}
+
+model CampingTheme {
+  id        String   @id @default(cuid())
+  camping   Camping  @relation(fields: [campingId], references: [id])
+  campingId String   @unique
+  primary   String
+  secondary String
+  font      String
+  heroImage String?
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  camping   Camping  @relation(fields: [campingId], references: [id])
+  campingId String
+  name      String
+  subject   String
+  html      String
+  language  String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  campingId String?
+  actorId   String
+  action    String
+  createdAt DateTime @default(now())
+}
