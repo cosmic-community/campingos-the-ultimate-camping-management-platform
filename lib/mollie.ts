@@ -1,8 +1,15 @@
 import { createMollieClient } from '@mollie/api-client'
 
-export const mollieClient = createMollieClient({
-  apiKey: process.env.MOLLIE_API_KEY as string
-})
+const mollieApiKey = process.env.MOLLIE_API_KEY
+
+// Changed: Guard Mollie client initialization to avoid build-time crashes when apiKey is missing.
+export const mollieClient: ReturnType<typeof createMollieClient> = mollieApiKey
+  ? createMollieClient({ apiKey: mollieApiKey })
+  : new Proxy({} as ReturnType<typeof createMollieClient>, {
+      get() {
+        throw new Error('Mollie API key is not configured. Set MOLLIE_API_KEY before using mollieClient.')
+      }
+    })
 
 export function verifyMollieWebhook(body: string, headers: Headers): boolean {
   const signature = headers.get('mollie-signature')
