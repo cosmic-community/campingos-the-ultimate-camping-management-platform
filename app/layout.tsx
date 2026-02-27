@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   description: 'The Ultimate Camping Management Platform'
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies()
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies() // Changed: cookies() returns a Promise in Next.js 16
   const locale = getLocale(cookieStore.get('NEXT_LOCALE')?.value)
   const bucketSlug = process.env.COSMIC_BUCKET_SLUG as string
 
@@ -27,10 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       </head>
       <body className="min-h-screen flex flex-col">
         <Header locale={locale} />
